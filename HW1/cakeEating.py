@@ -4,6 +4,7 @@
 import numpy as np
 from scipy.interpolate import interp1d
 from scipy.optimize import minimize_scalar
+import time
 
 # Class 1: Cake Eating using grid search (No Depreciation)
 class CakeEatingGS: 
@@ -43,10 +44,10 @@ class CakeEatingGS:
         elif v0 == 0:
             self.v0 = np.zeros_like(self.x)
 
-        # True value function (no depreciation)
+        # True value function (only for no depreciation)
         self.v_true_delta0 = np.log(1-self.beta)/(1-self.beta) + self.beta/((1-self.beta))**2 * np.log(self.beta) + 1/(1-self.beta) * np.log(self.x)
 
-        # True consumption policy function (no depreciation)
+        # True consumption policy function (only for no depreciation)
         self.c_true_delta0 = (1-self.beta)*self.x
 
     # Utility
@@ -91,6 +92,9 @@ class CakeEatingGS:
     
     # Solve Bellman equation
     def solve_model(self): 
+
+        start = time.time()
+
         v_old = self.v0.copy()
 
         for iteration in range(self.max_iter):
@@ -102,11 +106,12 @@ class CakeEatingGS:
             
             # Check convergence
             if np.max(np.abs(Tv - v_old)) < self.tolerance: 
-                print(f'Converged in {iteration} iterations')    
+                print(f'Converged in {iteration} iterations. Elapsed time is {time.time()-start:.2f} seconds.')    
                 break
 
             v_old = Tv.copy()
 
         else: # else executed if loop finishes
-            print("Warning: Model did not converge or is a Finite-Horizon Problem")
+            print("Warning: Model did not converge or is a Finite-Horizon Problem.")
+
             
