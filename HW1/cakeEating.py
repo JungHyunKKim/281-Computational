@@ -1,4 +1,4 @@
-# cake_eating.py
+# cakeEating.py
 
 # Packages
 import numpy as np
