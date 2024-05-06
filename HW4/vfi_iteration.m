@@ -18,8 +18,8 @@ I = num.a_n ;
 
 % 1.1
 % Construct matrix with jump components
-Aswitch = [-speye(I)*lambdaL, speye(I)*param.lambda(1); ...
-            speye(I)*lambdaL, -speye(I)*param.lambda(2)];
+Aswitch = [-speye(I)*lambdaL, speye(I)*lambdaL; ...
+            speye(I)*param.lambda(2), -speye(I)*param.lambda(2)];
 
 
 % 1.2

@@ -72,7 +72,7 @@ fprintf(['lambdaL is calibrated as %f to target the ratio between average ' ...
          'Minimized squared difference between simulated and empirical moments is %f \n'], ...
          [lambda_star,minloss]);
 
-% Code output: lambdaL is calibrated as 0.351660 to target the ratio between average high-income wealth to average low-income wealth of 2 
+% Code output: lambdaL is calibrated as 1.329004 to target the ratio between average high-income wealth to average low-income wealth of 2 
 %              Minimized squared difference between simulated and empirical moments is 0.000000 
 
 % -------------------------------------------------------------------------
@@ -96,7 +96,7 @@ fprintf(['lambdaL is calibrated as %f to target variance of wealth of 0.02 \n' .
          'Minimized squared difference between simulated and empirical moments is %f \n'], ...
          [lambda_star,minloss]);
 
-% Code output: lambdaL is calibrated as 0.542480 to target variance of wealth of 0.02 
+% Code output: lambdaL is calibrated as 0.213379 to target variance of wealth of 0.02 
 %              Minimized squared difference between simulated and empirical moments is 0.000000 
 
 
