@@ -2,9 +2,9 @@
 % 281-Computational Homework 5
 % Jung Hyun Kim
 %
-% Part 0. Solve for Stationary Equilibrium under Baseline Parameters
-% Part 1. Tracing Supply and Demand
-% Part 2. Homework
+% Part 0. Solve for stationary equilibrium under baseline parameters
+% Part 1. Tracing supply and demand using instruments
+% Part 2. Homework: Compare income shocks with homogeneous vs.heterogeneous returns
 %
 % Important functions  :
 %      solve_Aiyagari.m  - Solve Aiyagari model by minimizing squared
@@ -13,14 +13,18 @@
 %                             
 %      solve_Kd_excess.m - Compute excess capital demand given r and eqtype
 %
-%      solve_Ad.m        - Compute asset demand (capital supply) given r and w
+%      solve_HH.m        - Compute asset demand (capital supply) given r and w
 %                          Solve HJB using VFI using implicit method
 %                          Solve law of motion for distribution using kf_equation.m
-%      solve_Kd.m        - Compute capital demand given r
+%      solve_Kd.m        - Compute capital demand given r and aggregate Ld
 %                        - FOC conditions imposed
 %
 % Functions from class : create_grids.m, kf_equation.m, utility.m, 
 %                        vfi_iteration.m, vp_upwind.m
+%
+% Note: There is no need to solve to clear the labor market due to CRS
+%       technology (can analytically derive wage as a function of the
+%       rental rate of capital) 
 % -------------------------------------------------------------------------
 
 clear; 
@@ -43,8 +47,9 @@ set(groot, 'DefaultAxesLabelFontSizeMultiplier', 1.1);
 % -------------------------------------------------------------------------
 % Part 0. Solve for Stationary Equilibrium
 %
-% (1) Get capital demand and supply functions
-% (2) Solve for stationary equilibrium
+% (1) Get capital demand and supply functions to plot them
+% (2) Solve for stationary equilibrium to check if it is at the
+%     intersection of the plotted capital demand and supply curves
 % -------------------------------------------------------------------------
 
 % ----------------------------------------
@@ -60,21 +65,18 @@ for ii = 1:length(r_vec)
     w  = (1 - par.alpha) * par.z^( 1 / (1-par.alpha) ) ...
           *( par.alpha / (r + par.delta) )^( par.alpha/(1-par.alpha) ); 
     
-    [asset_D, g] = solve_Ad(r, w, par, num, grids); 
-    Ks_vec(ii,1) = asset_D;
-    Kd_vec(ii,1) = solve_Kd(r, par, grids, g); 
+    [~, ~, Ad, Ls, g] = solve_HH(r, w, par, num, grids); 
+    Ks_vec(ii,1) = Ad;
+    Kd_vec(ii,1) = solve_Kd(r, par, Ls); 
 
 end
 
 % ----------------------------------------
 % (2) Solve for Stationary Equilibrium
 
-r0 = 0; 
+r0 = par.rho - 0.005; 
 
-[rstar_seq, K_seq, g_seq] = solve_Aiyagari(par, num, grids, 'GE', r0); 
-
-wstar_seq = (1 - par.alpha) * par.z^( 1 / (1-par.alpha) ) ...
-            *( par.alpha / (rstar_seq + par.delta) )^( par.alpha/(1-par.alpha) ); 
+[r_seq, w_seq, K_seq, g_seq] = solve_Aiyagari(par, num, grids, 'GE', r0); 
 
 % ----------------------------------------
 
@@ -83,7 +85,7 @@ figure()
 hold on
 plot(Ks_vec,r_vec,'LineWidth',3,'Color',[178/255,34/255,34/255])
 plot(Kd_vec,r_vec,'--','LineWidth',3,'Color',[0,0.4470,0.7410,1])
-plot(K_seq, rstar_seq, 'o', 'MarkerSize', 10, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'none', 'LineWidth',2);
+plot(K_seq, r_seq, 'o', 'MarkerSize', 10, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'none', 'LineWidth',2);
 legend('Capital Supply', 'Capital Demand', 'Stationary Eq.', 'Location', 'southeast')
 grid on
 ylabel('Interest Rate')
@@ -96,14 +98,14 @@ saveas(gcf,'figures/stationary_capital.png')
 % Plot stationary distribution
 figure()
 hold on
-plot(grids.a(:,1), g_seq(:,1),'LineWidth',3,'Color',[178/255,34/255,34/255])
-plot(grids.a(:,1), g_seq(:,2),'--','LineWidth',3,'Color',[0,0.4470,0.7410,1])
+plot(grids.a(:,1), g_seq(:,1)/sum(g_seq(:,1)),'LineWidth',3,'Color',[178/255,34/255,34/255])
+plot(grids.a(:,1), g_seq(:,2)/sum(g_seq(:,2)),'--','LineWidth',3,'Color',[0,0.4470,0.7410,1])
 legend('Low Income', 'High Income')
 hold off
 grid on
 ylabel('Density')
 xlabel('Asset')
-title('Stationary Distribution', 'FontSize', 17)
+title('Stationary Distribution Conditional on Income', 'FontSize', 17)
 set(gcf,'Position',[200 0 600 400]) 
 saveas(gcf,'figures/stationary_distribution.png')
 
@@ -115,7 +117,7 @@ saveas(gcf,'figures/stationary_distribution.png')
 % -------------------------------------------------------------------------
 
 % Fix w0 to equilibrium wage (used for PE)
-par.w0 = wstar_seq; 
+par.w0 = w_seq; 
 
 % Save baseline z
 z_baseline = par.z; 
@@ -130,21 +132,23 @@ zloop.r_vec_pe = NaN(length(z_vec),1);
 zloop.K_vec_pe = NaN(length(z_vec),1); 
 
 % Initialize interest rate
-r0_ge = rstar_seq; 
-r0_pe = rstar_seq; 
+r0_ge = r_seq; 
+r0_pe = r_seq; 
 
 % Loop over z_vec to trace capital supply curve
 for ii = 1:length(z_vec)
 
     par.z = z_vec(ii); 
-
-    [rstar_ge, Kstar_ge, ~] = solve_Aiyagari(par, num, grids, 'GE', r0_ge); 
+    
+    % Solve GE
+    [rstar_ge, ~, Kstar_ge, ~] = solve_Aiyagari(par, num, grids, 'GE', r0_ge); 
     zloop.r_vec_ge(ii)      = rstar_ge; 
     zloop.K_vec_ge(ii)      = Kstar_ge; 
 
     r0_ge = rstar_ge; 
-
-    [rstar_pe, Kstar_pe, ~] = solve_Aiyagari(par, num, grids, 'PE', r0_pe); 
+    
+    % Solve PE
+    [rstar_pe, ~, Kstar_pe, ~] = solve_Aiyagari(par, num, grids, 'PE', r0_pe); 
     zloop.r_vec_pe(ii)      = rstar_pe; 
     zloop.K_vec_pe(ii)      = Kstar_pe; 
 
@@ -155,19 +159,6 @@ end
 % Set z to baseline
 par.z   = z_baseline; 
 
-% Plot capital supply curve
-figure()
-hold on
-plot(zloop.K_vec_pe, zloop.r_vec_pe,'LineWidth',3,'Color',[178/255,34/255,34/255])
-plot(zloop.K_vec_ge, zloop.r_vec_ge,'LineWidth',3,'Color',[0,0.4470,0.7410,1])
-grid on
-ylabel('Interest Rate')
-xlabel('Capital')
-title('Aggregate Capital Supply', 'FontSize', 17)
-legend('Capital Supply (PE)','Capital Supply (GE)','Location','southeast','FontSize',14)
-hold off
-saveas(gcf,'figures/capital_supply.png')
-
 % -------------------------------------------------------------------------
 % Part 1.2. Trace Capital Demand Curve Using Different Levels of Discount Rates
 %           -> Shifting capital supply curve
@@ -176,7 +167,7 @@ saveas(gcf,'figures/capital_supply.png')
 % -------------------------------------------------------------------------
 
 % Fix w0 to equilibrium wage (used for PE)
-par.w0 = wstar_seq; 
+par.w0 = w_seq; 
 
 % Save baseline rho
 rho_baseline = par.rho; 
@@ -189,14 +180,14 @@ rholoop.r_vec_ge = NaN(length(rho_vec),1);
 rholoop.K_vec_ge = NaN(length(rho_vec),1); 
 
 % Initialize interest rate
-r0_ge = rstar_seq; 
+r0_ge = r_seq; 
 
 % Loop over rho_vec to trace capital demand curve
 for ii = 1:length(rho_vec)
 
     par.rho = rho_vec(ii); 
 
-    [rstar_ge, Kstar_ge, ~] = solve_Aiyagari(par, num, grids, 'GE', r0_ge); 
+    [rstar_ge, ~, Kstar_ge, ~] = solve_Aiyagari(par, num, grids, 'GE', r0_ge); 
     rholoop.r_vec_ge(ii)    = rstar_ge; 
     rholoop.K_vec_ge(ii)    = Kstar_ge; 
 
@@ -206,18 +197,6 @@ end
 
 % Set rho to baseline
 par.rho = rho_baseline; 
-
-% Plot capital demand curve
-figure()
-hold on
-plot(rholoop.K_vec_ge, rholoop.r_vec_ge,'LineWidth',3,'Color',[0.9290,0.6940,0.1250,1])
-grid on
-ylabel('Interest Rate')
-xlabel('Capital')
-title('Aggregate Capital Demand', 'FontSize', 17)
-legend('Capital Demand','Location','northeast','FontSize',14)
-hold off
-saveas(gcf,'figures/capital_demand.png')
 
 % -------------------------------------------------------------------------
 % Part 1.3. Plot the traced capital demand and supply curves together
@@ -252,78 +231,64 @@ for ii = 1:length(r_vec)
 
     r  = r_vec(ii);
     w  = (1 - par.alpha) * par.z^( 1 / (1-par.alpha) ) ...
-                 *( par.alpha / (r + par.delta) )^( par.alpha/(1-par.alpha) ); 
+          *( par.alpha / (r + par.delta) )^( par.alpha/(1-par.alpha) ); 
     
-    [asset_D, g]         = solve_Ad(r, w, par, num, grids); 
-    Ks_vec_heteroR(ii,1) = asset_D;
-    Kd_vec_heteroR(ii,1) = solve_Kd(r, par, grids, g); 
+    [~, ~, Ad, Ls, g]     = solve_HH(r, w, par, num, grids); 
+    Ks_vec_heteroR(ii,1) = Ad;
+    Kd_vec_heteroR(ii,1) = solve_Kd(r, par, Ls); 
     
 end
 
 % Find equilibrium capital demand and supply
 r0 = 0; 
-
-[rstar_seq_heteroR, K_seq_heteroR, g_heteroR] = solve_Aiyagari(par, num, grids, 'GE', r0); 
-
-wstar_seq_heteroR = (1 - par.alpha) * par.z^( 1 / (1-par.alpha) ) ...
-                    *( par.alpha / (rstar_seq + par.delta) )^( par.alpha/(1-par.alpha) ); 
+[r_seq_heteroR, w_seq_heteroR, K_seq_heteroR, g_heteroR] = solve_Aiyagari(par, num, grids, 'GE', r0); 
 
 % Plot capital demand and supply functions and the stationary equilibrium
+
 figure()
+sgtitle('Income Shock with Homogeneous vs. Heterogeneous Returns', 'FontSize', 17, 'FontWeight', 'bold');
+set(gcf,'Position',[200 0 2000 400]) 
 
-subplot(1,2,1)
+subplot(1,3,1)
 hold on
-plot(Ks_vec,r_vec,'LineWidth',3,'Color',[178/255,34/255,34/255])
-plot(Kd_vec,r_vec,'--','LineWidth',3,'Color',[0,0.4470,0.7410,1])
-plot(K_seq, rstar_seq, 'o', 'MarkerSize', 10, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'none', 'LineWidth',2);
-legend('Capital Supply', 'Capital Demand', 'Stationary Eq.', 'Location', 'southeast')
-grid on
-ylabel('Interest Rate')
-xlabel('Capital')
-ylim([r_vec(1), r_vec(end)])
-title('Income Shock Only', 'FontSize', 14)
-
-subplot(1,2,2)
-hold on
+plot(Ks_vec,r_vec,'--','LineWidth',3,'Color',[178/255,34/255,34/255])
 plot(Ks_vec_heteroR,r_vec,'LineWidth',3,'Color',[178/255,34/255,34/255])
-plot(Kd_vec_heteroR,r_vec,'--','LineWidth',3,'Color',[0,0.4470,0.7410,1])
-plot(K_seq_heteroR, rstar_seq_heteroR, 'o', 'MarkerSize', 10, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'none', 'LineWidth',2);
-legend('Capital Supply', 'Capital Demand', 'Stationary Eq.', 'Location', 'southeast')
+plot(Kd_vec,r_vec,'--','LineWidth',3,'Color',[0,0.4470,0.7410,1])
+plot(Kd_vec_heteroR,r_vec,'LineWidth',3,'Color',[0,0.4470,0.7410,1])
+plot(K_seq, r_seq, 'o', 'MarkerSize', 10, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'none', 'LineWidth',2);
+plot(K_seq_heteroR, r_seq_heteroR, 'x', 'MarkerSize', 10, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'none', 'LineWidth',2);
+lgd = legend('Ks (Baseline)', 'Ks (Hetero returns)', 'Kd (Baseline)' , 'Kd (Hetero returns)', ...
+             'SE (Baseline)','SE (Hetero returns)', 'Location', 'northeast'); 
 grid on
 ylabel('Interest Rate')
 xlabel('Capital')
 ylim([r_vec(1), r_vec(end)])
-title('Income Shock with Heterogeneous Returns', 'FontSize', 14)
+title('Capital Curves', 'FontSize', 14,'FontWeight','Normal')
+pause(0.01)
+legendPos = lgd.Position; % Adjust the legend position slightly downwards
+legendPos(2) = legendPos(2) - 0.03;  % Adjust this value to
+lgd.Position = legendPos;
 
-sgtitle('Stationary Distribution', 'FontSize', 17);
-set(gcf,'Position',[200 0 1350 450]) 
-saveas(gcf,'figures/stationary_capital_heteroR.png')
-
-% Plot stationary distribution
-figure()
-
-subplot(1,2,1)
+subplot(1,3,2)
 hold on
-plot(grids.a(:,1), g_seq(:,1),'LineWidth',3,'Color',[178/255,34/255,34/255])
-plot(grids.a(:,1), g_seq(:,2),'--','LineWidth',3,'Color',[0,0.4470,0.7410,1])
-legend('Low Income', 'High Income')
+plot(grids.a(:,1), g_seq(:,1)/sum(g_seq(:,1)),'--','LineWidth',3,'Color',[178/255,34/255,34/255])
+plot(grids.a(:,1), g_heteroR(:,1)/sum(g_seq(:,1)),'LineWidth',3,'Color',[0,0.4470,0.7410,1])
+legend('Low Income (Baseline)', 'Low Income (Hetero returns)')
 hold off
 grid on
 ylabel('Density')
 xlabel('Asset')
-title('Income Shock Only', 'FontSize', 14)
+title('Stationary Distribution (Low Income)', 'FontSize', 14 ,'FontWeight','Normal')
 
-subplot(1,2,2)
+subplot(1,3,3)
 hold on
-plot(grids.a(:,1), g_heteroR(:,1),'LineWidth',3,'Color',[178/255,34/255,34/255])
-plot(grids.a(:,1), g_heteroR(:,2),'--','LineWidth',3,'Color',[0,0.4470,0.7410,1])
-legend('Low Income', 'High Income')
+plot(grids.a(:,1), g_seq(:,1)/sum(g_seq(:,1)),'--','LineWidth',3,'Color',[178/255,34/255,34/255])
+plot(grids.a(:,1), g_heteroR(:,1)/sum(g_seq(:,1)),'LineWidth',3,'Color',[0,0.4470,0.7410,1])
+legend('High Income (Baseline)', 'High Income (Hetero returns)')
 hold off
 grid on
 ylabel('Density')
 xlabel('Asset')
-title('Income Shock with Heterogeneous Returns', 'FontSize', 14)
+title('Stationary Distribution (High Income)', 'FontSize', 14 ,'FontWeight','Normal')
 
-sgtitle('Stationary Distribution', 'FontSize', 17);
-set(gcf,'Position',[200 0 1200 400]) 
-saveas(gcf,'figures/stationary_distribution_heteroR.png')
+saveas(gcf,'figures/compare_shocktype.png')

@@ -1,6 +1,5 @@
-function [Kd] = solve_Kd(r, par, grids, g)
+function [Kd] = solve_Kd(r, par, Ld)
 
-    Kd = ( (par.alpha * par.z) / (r + par.delta) )^( 1 / (1-par.alpha) ) ...
-         * sum(sum(par.e.*g.*grids.da)) ; 
+    Kd = ( (par.alpha * par.z) / (r + par.delta) )^( 1 / (1-par.alpha) ) * Ld ; 
 
 end

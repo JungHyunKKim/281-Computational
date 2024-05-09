@@ -13,7 +13,7 @@ I = num.a_n ;
 %    1.3. A1, A2   : Construct matrix with only drift components for each lambda
 %                    (deterministic components)
 %    1.4. A        : Create block matrix A using A1, A2 and adding Aswitch
-% 2. Solve for value function (Equation 16 of page 6
+% 2. Solve for value function (Equation 16 of page 6)
 % -------------------------------------------------------------------------
 
 % 1.1

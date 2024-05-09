@@ -1,4 +1,4 @@
-function [Kd_excess] = solve_Kd_excess(r, par, num, grids, eqtype)
+function [Kd_excess, Kd, Ks, g, w] = solve_Kd_excess(r, par, num, grids, eqtype)
     
     switch eqtype
         case 'GE'
@@ -11,8 +11,8 @@ function [Kd_excess] = solve_Kd_excess(r, par, num, grids, eqtype)
                   'Use "GE" (General Equilibrium) or "PE" (Partial Equilibrium).'])
     end
 
-    [Ks, g] = solve_Ad(r, w, par, num, grids); 
-    [Kd]    = solve_Kd(r, par, grids, g); 
+    [~, ~, Ks, Ls, g] = solve_HH(r, w, par, num, grids); 
+    [Kd]              = solve_Kd(r, par, Ls); 
 
     Kd_excess = Kd - Ks; 
 
