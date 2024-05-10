@@ -74,7 +74,7 @@ end
 % ----------------------------------------
 % (2) Solve for Stationary Equilibrium
 
-r0 = par.rho - 0.005; 
+r0 = 0.025; %par.rho - 0.005; 
 
 [r_seq, w_seq, K_seq, g_seq] = solve_Aiyagari(par, num, grids, 'GE', r0); 
 

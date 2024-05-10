@@ -34,14 +34,16 @@ function [error, Ks, g, w] = objective(r)
 end
 
 % Set the value of the Outputfcn field of the options structure to a function handle to outfun.
-opts = optimset('OutputFcn', @outfun);
+opts = optimset('Display','iter','TolFun',1e-08,'OutputFcn', @outfun);
 
 % Solve for the interest rate that minimizes the squared excess demand
 [rstar, error, ~, ~] = fminsearch(@objective, r0, opts);
 Kstar               = Ks_opt;
 gstar               = g_opt;
-wstar               = w_opt; 
+wstar               = w_opt;
+
 toc
+
 fprintf('Error (excess demand squared) is %.4f \n', error)
 
 % -------------------------------------------------------------------------
