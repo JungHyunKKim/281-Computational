@@ -1,4 +1,4 @@
-function [Va_Upwind,sb,sf] = vp_upwind(v0,r,w,par,num,grids)
+function [Va_Upwind, Vaf, Vab, sf, sb, If, Ib, I0] = vp_upwind(v0,r,w,par,num,grids)
 
 V = v0 ;
 
@@ -11,19 +11,19 @@ Vaf(1:end-1,:) = (V(2:end,:) - V(1:end-1,:))/grids.da ;
 Vaf(end,:) = 0; 
 
 Vab(2:end,:) = (V(2:end,:)-V(1:end-1,:))./grids.da;
-Vab(1,:) = (par.rshock.*r.*grids.a(1,:) + w.*par.e).^(-1); %state constraint boundary condition    
+Vab(1,:) = marginal_utility(par.rshock.*r.*grids.a(1,:) + w*((1 - par.tau) * par.e + par.mu * (1 - par.e)), par); %state constraint boundary condition    
 
 % Consumption and savings with forward difference
-cf = max(Vaf,1e-08).^(-1);
-sf = w.*par.e + par.rshock.*r.*grids.a - cf ;
+cf = inv_marginal_utility(max(Vaf,1e-08), par);
+sf = w*((1 - par.tau) * par.e + par.mu * (1 - par.e)) + par.rshock.*r.*grids.a - cf ;
 
 % Consumption and savings with backward difference
-cb = max(Vab,1e-08).^(-1);
-sb = w.*par.e + par.rshock.*r.*grids.a - cb ;
+cb = inv_marginal_utility(max(Vab,1e-08), par);
+sb = w*((1 - par.tau) * par.e + par.mu * (1 - par.e)) + par.rshock.*r.*grids.a - cb ;
 
 % Consumption and derivative of value function at steady state
-c0 = w.*par.e + par.rshock.*r.*grids.a ;
-Va0 = c0.^(-1);
+c0 = w*((1 - par.tau) * par.e + par.mu * (1 - par.e)) + par.rshock.*r.*grids.a ;
+Va0 = marginal_utility(max(c0,1e-08), par);
 
 If = sf > 0; % Positive drift --> forward difference
 Ib = sb < 0; % Negative drift --> backward difference

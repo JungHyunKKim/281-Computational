@@ -1,4 +1,9 @@
-function u = utility(c)
+function u = utility(c, par)
 
-u = log(c) ;
+    if par.gamma == 1
+        u = log(c);
+    else
+        u = c.^(1 - par.gamma) / (1 - par.gamma);
+    end
+
 end

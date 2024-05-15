@@ -1,4 +1,4 @@
-function [v_new,c,A] = vfi_iteration(v0,r,w,par,num,grids)
+function [A,u,c,v_new,Va_Upwind,Vaf,Vab,If,Ib,I0,Aswitch] = vfi_iteration(v0,r,w,par,num,grids)
 
 I = num.a_n ;
 
@@ -21,13 +21,12 @@ I = num.a_n ;
 Aswitch = [-speye(I)*par.lambda(1), speye(I)*par.lambda(1); ...
             speye(I)*par.lambda(2), -speye(I)*par.lambda(2)];
 
-
 % 1.2
 % Find forward and backward difference and get approximated v' (Ix2) matrix
-[Va_Upwind,ssb,ssf] = vp_upwind(v0,r,w,par,num,grids) ;
+[Va_Upwind,Vaf,Vab,ssf,ssb,If,Ib,I0] = vp_upwind(v0,r,w,par,num,grids) ;
 
-c = Va_Upwind.^(-1);
-u = utility(c);
+c = inv_marginal_utility(Va_Upwind, par);
+u = utility(c, par);
 
 % 1.3
 % Construct diagonals of drift components in columns

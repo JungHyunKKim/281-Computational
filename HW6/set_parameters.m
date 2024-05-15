@@ -1,7 +1,7 @@
 %% Set Parameters
 % Preferences
 global ggamma rrho
-ggamma = 2;        % coefficient of relative risk aversion
+ggamma = 1;        % coefficient of relative risk aversion
 rrho = 0.01;       % rate of time preference
 
 % Production function

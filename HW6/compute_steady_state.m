@@ -31,8 +31,8 @@ KS = zeros(Ir,1);
 r = r0;
 KD = (((aalpha) / (r + ddelta)) ^ (1 / (1 - aalpha))) * zAvg;
 w = (1 - aalpha) * (KD ^ aalpha) * ((zAvg) ^ (-aalpha));
-v0(:,1) = (w*mmu*(1-z(1)) + r.*a).^(1-ggamma)/(1-ggamma)/rrho;
-v0(:,2) = (w*(1-ttau)*z(2) + r.*a).^(1-ggamma)/(1-ggamma)/rrho;
+v0(:,1) = log((w*mmu*(1-z(1)) + r.*a)); %(w*mmu*(1-z(1)) + r.*a).^(1-ggamma)/(1-ggamma)/rrho; 
+v0(:,2) = log((w*(1-ttau)*z(2) + r.*a)); %(w*(1-ttau)*z(2) + r.*a).^(1-ggamma)/(1-ggamma)/rrho;
 
 %----------------------------------------------------------------
 % Iterate to find steady state interest rate
@@ -90,7 +90,7 @@ for ir=1:Ir
         I0 = (1-If-Ib);     %no drift
         dV_Upwind = dVf.*If + dVb.*Ib + dV0.*I0;
         c = dV_Upwind.^(-1/ggamma);
-        u = c.^(1-ggamma)/(1-ggamma);
+        u = log(c); %c.^(1-ggamma)/(1-ggamma); 
         savingsSS = w*((1 - ttau) * zz + mmu * (1 - zz)) + r.*aa - c;
         
         % Construct matrix for updating implicit scheme
