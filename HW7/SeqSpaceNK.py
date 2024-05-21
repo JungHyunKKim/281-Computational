@@ -92,10 +92,15 @@ class solveSeqSpaceNK:
         Phi_inu = Z
 
         # Household investment block: Tobin's q
-        Phi_qk = -1/self.eta * I 
-        Phi_qn = Z
-        Phi_qa = Z
-        Phi_qnu = Z
+
+        # intermediate effect
+        PhiIE_qi = 1/self.eta * I
+
+        # total effect
+        Phi_qk = PhiIE_qi * Phi_ik -1/self.eta * I 
+        Phi_qn = PhiIE_qi * Phi_in
+        Phi_qa = PhiIE_qi * Phi_ia
+        Phi_qnu = PhiIE_qi * Phi_inu
 
         # combine household investment block matrices
         dYHHinvdU = sp.sparse.bmat([[Phi_ik, Phi_in],
