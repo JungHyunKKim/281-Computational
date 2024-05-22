@@ -10,32 +10,28 @@ class solveSeqSpaceNK:
     
     # Define the parameters
     def __init__(self, 
-        sigma   = 2, 
+        sigma   = 1, 
         beta    = 0.99, 
-        PiSS    = 1, 
         delta   = 0.025, 
-        eta     = 1, 
-        alpha   = 0.33, 
+        zeta    = 1, 
+        alpha   = 1/3, 
         theta   = 0.75, 
-        epsilon = 7, 
+        epsilon = 6, 
         psi     = 1, 
-        A       = 1, 
-        phi_pi  = 2, 
+        phi_pi  = 1.5, 
         phi_y   = 0.5, 
         horizon = 100):
 
         self.sigma   = sigma
         self.beta    = beta
-        self.PiSS    = PiSS
         self.delta   = delta
-        self.eta     = eta
+        self.zeta    = zeta
         self.alpha   = alpha
         self.theta   = theta 
         self.epsilon = epsilon
         self.psi     = psi
-        self.A       = A
-        self.phi_pi       = phi_pi
-        self.phi_y        = phi_y
+        self.phi_pi  = phi_pi
+        self.phi_y   = phi_y
         self.horizon = horizon
 
         self.rho     = -np.log(self.beta)
@@ -86,7 +82,7 @@ class solveSeqSpaceNK:
 
         ### Household investment block ###
         # Household investment block: nominal interest rate
-        Phi_ik = 1/self.delta * Ip1 - ((1-self.delta)/self.delta) * I
+        Phi_ik = 1/self.delta * I - ((1-self.delta)/self.delta) * Im1
         Phi_in = Z
         Phi_ia = Z
         Phi_inu = Z
@@ -94,10 +90,10 @@ class solveSeqSpaceNK:
         # Household investment block: Tobin's q
 
         # intermediate effect
-        PhiIE_qi = 1/self.eta * I
+        PhiIE_qi = self.zeta * I
 
         # total effect
-        Phi_qk = PhiIE_qi * Phi_ik -1/self.eta * I 
+        Phi_qk = PhiIE_qi * Phi_ik - self.zeta * Im1
         Phi_qn = PhiIE_qi * Phi_in
         Phi_qa = PhiIE_qi * Phi_ia
         Phi_qnu = PhiIE_qi * Phi_inu
@@ -114,7 +110,7 @@ class solveSeqSpaceNK:
 
         ### Aggregate resource constraint ###
 
-        Phi_yk = self.alpha * I
+        Phi_yk = self.alpha * Im1
         Phi_yn = (1-self.alpha) * I
         Phi_ya = I
         Phi_ynu = Z
@@ -150,7 +146,7 @@ class solveSeqSpaceNK:
         
         # intermediate effect
         PhiIE_w_realn = self.psi * I
-        PhiIE_w_realc = -self.sigma * I
+        PhiIE_w_realc = self.sigma * I
 
         # total effect
         Phi_w_realk  = PhiIE_w_realc * Phi_ck
@@ -172,7 +168,7 @@ class solveSeqSpaceNK:
         # intermediate effect
         PhiIE_rk_realw_real = I
         PhiIE_rk_realn = I
-        PhiIE_rk_realk = -I
+        PhiIE_rk_realk = -Im1
 
         # total effect
         Phi_rk_realk = PhiIE_rk_realw_real * Phi_w_realk + PhiIE_rk_realk 
