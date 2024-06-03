@@ -13,7 +13,7 @@ def firm(calibration, ss, T):
     J = {}
 
     Y = ss['Z'] * ss['K'] ** alpha * ss['L'] ** (1 - alpha)
-    r = alpha * Y / ss['K']
+    r = alpha * Y / ss['K'] - ss['delta']
     w = (1 - alpha) * Y / ss['L']
 
     # firm block matrices: output
@@ -21,8 +21,8 @@ def firm(calibration, ss, T):
               'K': alpha * Y / ss['K'] * Im1}
     
     # firm block matrices: real rate
-    J['r'] = {'Z': r / ss['Z'] * I, 
-              'K': (alpha - 1) * r / ss['K'] * Im1}
+    J['r'] = {'Z': alpha * ss['Y'] / (ss['Z'] * ss['K'])  * I, 
+              'K': alpha * (alpha - 1) * ( ss['Y'] / ss['K']**2 ) * Im1}
     
     # firm block matrices: real rate
     J['w'] = {'Z': w / ss['Z'] * I, 
