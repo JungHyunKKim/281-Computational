@@ -1,0 +1,76 @@
+---------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\JungHyun\Documents\GitHub\281-Computational\Project\plots.log
+  log type:  text
+ opened on:  13 Jun 2024, 19:24:19
+
+. 
+. ********************************************************************************
+. * Import and plot data
+. ********************************************************************************
+. 
+. *** real PCE *** 
+. 
+. import excel "RPCE.xls", case(upper) cellrange(A13) clear
+(3 vars, 53 obs)
+
+. 
+. rename (A B C) (date rPCE_dur rPCE_serv)
+
+. 
+. gen date_monthly = mofd(date)
+
+. format date_monthly %tm
+
+. tsset date_monthly
+
+Time variable: date_monthly, 2019m12 to 2024m4
+        Delta: 1 month
+
+. 
+. tw tsline rPCE_dur rPCE_serv, xtitle("Time") ytitle("Index") ///
+>        legend(ring(0) pos(5) order(1 "Durable Goods" 2 "Services"))
+
+.            
+. graph export "rPCE.eps", replace
+file rPCE.eps saved as EPS format
+
+. 
+. 
+. *** CPI *** 
+. 
+. import excel "CPI.xls", case(upper) cellrange(A13) clear
+(3 vars, 54 obs)
+
+. 
+. rename (A B C) (date CPI_dur CPI_serv)
+
+. gen date_monthly = mofd(date)
+
+. format date_monthly %tm
+
+. tsset date_monthly
+
+Time variable: date_monthly, 2019m12 to 2024m5
+        Delta: 1 month
+
+. 
+. tw tsline CPI_dur CPI_serv, xtitle("Time") ytitle("% change from previous year") ///
+>        legend(ring(0) pos(1) order(1 "Durable Goods" 2 "Services"))
+
+.            
+. graph export "CPI.eps", replace
+(file CPI.eps not found)
+file CPI.eps saved as EPS format
+
+. 
+. ********************************************************************************
+. * Plot data
+. ********************************************************************************
+. 
+. log close
+      name:  <unnamed>
+       log:  C:\Users\JungHyun\Documents\GitHub\281-Computational\Project\plots.log
+  log type:  text
+ closed on:  13 Jun 2024, 19:24:22
+---------------------------------------------------------------------------------------------------------------------
